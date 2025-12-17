@@ -139,6 +139,46 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   }
 });
 
+// JOIN GROUP
+router.post("/:id/join", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    try {
+      await GroupMember.create({
+        group_id: id,
+        user_id: req.user.id,
+      });
+      res.json({ message: "Joined group successfully." });
+    } catch (err) {
+      if (err.code === 11000) {
+        return res.json({ message: "Already a member of this group." });
+      }
+      throw err;
+    }
+  } catch (err) {
+    console.error("Join group error:", err);
+    res.status(500).json({ message: "Failed to join group." });
+  }
+});
+
+// LEAVE GROUP
+router.post("/:id/leave", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await GroupMember.deleteOne({
+      group_id: id,
+      user_id: req.user.id,
+    });
+
+    res.json({ message: "Left group successfully." });
+  } catch (err) {
+    console.error("Leave group error:", err);
+    res.status(500).json({ message: "Failed to leave group." });
+  }
+});
+
 
 export default router;
 
