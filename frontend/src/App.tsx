@@ -1,6 +1,6 @@
+import Index from "./pages/Index";
+
 const App = () => (
-  <div>
-    <h1>Alvora</h1>
-  </div>
+  <Index />
 );
 export default App;
