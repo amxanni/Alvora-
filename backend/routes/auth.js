@@ -62,4 +62,55 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// LOGIN
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required." });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password." });
+    }
+
+    const match = await bcrypt.compare(password, user.passwordHash);
+    if (!match) {
+      return res.status(400).json({ message: "Invalid email or password." });
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      message: "Login successful.",
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        full_name: user.full_name,
+        faculty: user.faculty
+      },
+      session: {
+        access_token: token,
+        expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000
+      }
+    });
+
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Login failed." });
+  }
+});
+
+// LOGOUT
+router.post("/logout", async (req, res) => {
+  res.json({ message: "Logout successful." });
+});
+
+
 export default router;
