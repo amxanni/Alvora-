@@ -39,7 +39,7 @@ tutori și colaboratori pentru proiecte academice.</p>
 
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-accent/30 to-transparent rounded-3xl blur-3xl" />
-              <img alt="Studenți colaborând împreună" className="relative rounded-3xl shadow-glow w-full h-auto" src="/lovable-uploads/68b8f4de-039a-4027-91c5-8169b037e861.jpg" />
+              <img alt="Studenți colaborând împreună" className="relative rounded-3xl shadow-glow w-full h-auto" src="/uploads/68b8f4de-039a-4027-91c5-8169b037e861.jpg" />
             </div>
           </div>
         </div>
