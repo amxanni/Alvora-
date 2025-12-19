@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, Image, Paperclip, X } from "lucide-react";
+import { ArrowLeft, Send, Image, Paperclip, X, Download, FileText } from "lucide-react";
 import { api } from "@/lib/api";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
@@ -192,7 +192,7 @@ const GroupChat = () => {
     <ProtectedRoute>
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border px-4 py-3">
+        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border px-4 py-3">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -249,25 +249,52 @@ const GroupChat = () => {
                       }`}
                     >
                       {message.type === "image" && message.file_url && (
-                        <img
-                          src={message.file_url}
-                          alt="Imagine"
-                          className="rounded-lg max-w-full mb-2 cursor-pointer"
-                          onClick={() => window.open(message.file_url!, "_blank")}
-                        />
+                        <div className="relative inline-block">
+                          <img
+                            src={message.file_url}
+                            alt="Imagine"
+                            className="rounded-lg max-w-full mb-2 cursor-pointer"
+                            onClick={() => window.open(message.file_url!, "_blank")}
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className={`absolute top-1/2 -translate-y-1/2 h-8 w-8 bg-white border-primary text-primary hover:bg-white hover:text-primary z-10 shadow-sm ${
+                              isOwn ? "right-full mr-6" : "left-full ml-6"
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(message.file_url!, "_blank");
+                            }}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
                       )}
                       {message.type === "file" && message.file_url && (
-                        <a
-                          href={message.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`flex items-center gap-2 p-2 rounded-lg mb-2 ${
-                            isOwn ? "bg-primary-foreground/10" : "bg-background"
-                          }`}
-                        >
-                          <Paperclip className="h-4 w-4" />
-                          <span className="text-sm truncate">{message.file_name}</span>
-                        </a>
+                        <div className="relative group">
+                          <div className={`flex items-center gap-2 p-2 rounded-lg mb-2 ${
+                              isOwn ? "bg-primary-foreground/10" : "bg-background"
+                            }`}>
+                            <FileText className={`h-8 w-8 flex-shrink-0 ${isOwn ? "text-primary-foreground" : "text-primary"}`} />
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-medium truncate">{message.file_name}</span>
+                              <span className={`text-[10px] uppercase ${isOwn ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                                {message.file_name?.split('.').pop() || 'FILE'}
+                              </span>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className={`absolute top-1/2 -translate-y-1/2 h-8 w-8 bg-white border-primary text-primary hover:bg-white hover:text-primary z-10 shadow-sm ${
+                              isOwn ? "right-full mr-6" : "left-full ml-6"
+                            }`}
+                            onClick={() => window.open(message.file_url!, "_blank")}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
                       )}
                       {message.text && <p className="text-sm">{message.text}</p>}
                     </div>
@@ -328,7 +355,7 @@ const GroupChat = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.7z"
               className="hidden"
               onChange={(e) => handleFileSelect(e, false)}
             />
