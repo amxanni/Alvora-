@@ -44,6 +44,43 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
+// GET MY GROUPS
+router.get("/my-groups", authMiddleware, async (req, res) => {
+  try {
+    const memberships = await GroupMember.find({ user_id: req.user.id });
+    const groupIds = memberships.map(m => m.group_id);
+
+    const groups = await Group.find({ _id: { $in: groupIds } }).sort({ createdAt: -1 });
+
+    const allMembers = await GroupMember.find({ group_id: { $in: groupIds } });
+    const memberCountMap = new Map();
+    
+    allMembers.forEach(m => {
+      const gId = m.group_id.toString();
+      memberCountMap.set(gId, (memberCountMap.get(gId) || 0) + 1);
+    });
+
+    const formattedGroups = groups.map((g) => ({
+      id: g._id.toString(),
+      name: g.name,
+      faculty: g.faculty,
+      year: g.year,
+      course: g.course,
+      description: g.description,
+      member_count: memberCountMap.get(g._id.toString()) || 0,
+      is_member: true,
+      created_by: g.created_by.toString(),
+      created_at: g.createdAt,
+      updated_at: g.updatedAt,
+    }));
+
+    res.json(formattedGroups);
+  } catch (err) {
+    console.error("Get my groups error:", err);
+    res.status(500).json({ message: "Failed to fetch user groups." });
+  }
+});
+
 // GET GROUP BY ID
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
@@ -119,19 +156,17 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     const { id } = req.params;
 
     const group = await Group.findById(id);
-
     if (!group) {
       return res.status(404).json({ message: "Group not found." });
     }
 
     if (group.created_by.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Only group creator can delete the group." });
+      return res.status(403).json({ message: "Not authorized to delete this group." });
     }
 
+    await Group.deleteOne({ _id: id });
     await GroupMember.deleteMany({ group_id: id });
-    await Message.deleteMany({ group_id: id });
-    await Group.findByIdAndDelete(id);
-
+    
     res.json({ message: "Group deleted successfully." });
   } catch (err) {
     console.error("Delete group error:", err);
@@ -144,18 +179,26 @@ router.post("/:id/join", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
 
-    try {
-      await GroupMember.create({
-        group_id: id,
-        user_id: req.user.id,
-      });
-      res.json({ message: "Joined group successfully." });
-    } catch (err) {
-      if (err.code === 11000) {
-        return res.json({ message: "Already a member of this group." });
-      }
-      throw err;
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found." });
     }
+
+    const existing = await GroupMember.findOne({
+      group_id: id,
+      user_id: req.user.id
+    });
+
+    if (existing) {
+      return res.status(400).json({ message: "Already a member of this group." });
+    }
+
+    await GroupMember.create({
+      group_id: id,
+      user_id: req.user.id
+    });
+
+    res.json({ message: "Joined group successfully." });
   } catch (err) {
     console.error("Join group error:", err);
     res.status(500).json({ message: "Failed to join group." });
@@ -167,9 +210,18 @@ router.post("/:id/leave", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
 
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found." });
+    }
+
+    if (group.created_by.toString() === req.user.id) {
+      return res.status(400).json({ message: "Creator cannot leave the group. Delete it instead." });
+    }
+
     await GroupMember.deleteOne({
       group_id: id,
-      user_id: req.user.id,
+      user_id: req.user.id
     });
 
     res.json({ message: "Left group successfully." });
@@ -179,6 +231,4 @@ router.post("/:id/leave", authMiddleware, async (req, res) => {
   }
 });
 
-
 export default router;
-

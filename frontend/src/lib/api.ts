@@ -72,6 +72,9 @@ export const api = {
     getAll: async () => {
       return apiRequest("/groups");
     },
+    getMyGroups: async () => {
+      return apiRequest("/groups/my-groups");
+    },
     getById: async (id: string) => {
       return apiRequest(`/groups/${id}`);
     },

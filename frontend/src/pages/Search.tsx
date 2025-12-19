@@ -29,6 +29,7 @@ interface Student {
   full_name: string;
   email: string;
   faculty: string;
+  groups?: string[];
 }
 
 const Search = () => {
@@ -44,6 +45,8 @@ const Search = () => {
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
   const [leavingGroupId, setLeavingGroupId] = useState<string | null>(null);
 
+  const [myGroups, setMyGroups] = useState<StudyGroup[]>([]);
+  
   // Students state
   const [students, setStudents] = useState<Student[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
@@ -64,6 +67,9 @@ const Search = () => {
 
       const groups = await api.groups.getAll();
       setStudyGroups(groups);
+
+      const myGroupsData = await api.groups.getMyGroups();
+      setMyGroups(myGroupsData);
     } catch (error) {
       console.error("Error fetching groups:", error);
     } finally {
@@ -192,6 +198,24 @@ const Search = () => {
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input type="text" placeholder="Caută grupuri, studenți..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-muted/50 border-border/50 focus:bg-background transition-smooth py-0 px-[55px] mx-[3px] my-[5px]" />
             </div>
+
+            {/* My Groups - Horizontal List */}
+            {myGroups.length > 0 && (
+              <div className="mt-4 mb-2">
+                <p className="text-sm font-medium text-muted-foreground mb-2 px-1">Grupurile mele</p>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {myGroups.map(group => (
+                    <div 
+                      key={group.id}
+                      onClick={() => handleOpenChat(group.id)}
+                      className="flex-shrink-0 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-full px-4 py-1.5 cursor-pointer transition-colors whitespace-nowrap"
+                    >
+                      <span className="text-sm font-medium text-primary">{group.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Tabs */}
             <Tabs defaultValue="groups" className="mt-4">
@@ -403,9 +427,18 @@ const Search = () => {
                           <p className="text-sm text-muted-foreground">
                             {student.email}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {student.faculty}
                           </p>
+                          {student.groups && student.groups.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {student.groups.map((groupName, idx) => (
+                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-secondary-foreground">
+                                  {groupName}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </Card>
                     ))
