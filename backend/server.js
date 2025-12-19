@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.js";
 import groupsRoutes from "./routes/groups.js";
 import profilesRoutes from "./routes/profiles.js";
 import messagesRoutes from "./routes/messages.js";
+import storageRoutes from "./routes/storage.js";
 
 
 dotenv.config();
@@ -43,6 +44,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/groups", groupsRoutes);
 app.use("/api/profiles", profilesRoutes);
 app.use("/api/messages", messagesRoutes);
+app.use("/api/storage", storageRoutes);
+app.use("/uploads", express.static("uploads"));
 
 app.get("/api/me", authMiddleware, (req, res) => {
   res.json({ message: "User autenticat", user: req.user });
